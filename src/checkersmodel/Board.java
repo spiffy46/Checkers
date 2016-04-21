@@ -8,12 +8,16 @@ public class Board {
 		for(int x = 0; x < board.length; x++){
 			for(int y = 0; y < board[0].length; y++){
 				if(y <= 2){
-					if((x + y) % 2 == 0){
+					if((x + y) % 2 == 1){
 						board[x][y] = new Square(2);
+					}else{
+						board[x][y] = new Square();
 					}
 				}else if(y >= 5){
-					if((x + y) % 2 == 0){
+					if((x + y) % 2 == 1){
 						board[x][y] = new Square(1);
+					}else{
+						board[x][y] = new Square();
 					}
 				}else{
 					board[x][y] = new Square();

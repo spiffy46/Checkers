@@ -1,6 +1,8 @@
 package checkers;
 
+import checkersmodel.CheckersModel;
 import gui.MainFrame;
+import view.MyView;
 
 public class main {
 	
@@ -9,7 +11,11 @@ public class main {
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				MainFrame window = new MainFrame();
-				window.createAndShowWindow();
+				MyView view = new MyView();
+				CheckersModel model = new CheckersModel();
+				view.setModel(model);
+				view.setFrame(window);
+				window.createAndShowWindow(view,model);
 			}
  		});
 	}
