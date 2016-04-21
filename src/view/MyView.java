@@ -2,10 +2,12 @@ package view;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.geom.Point2D;
+import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -53,11 +55,11 @@ public class MyView implements Observer, MouseListener{
 
 		}
 		
-		Dimension s = model.getSelected();
+		Point2D s = model.getSelected();
 		if(s != null) {
 			g2d.setColor(Color.YELLOW);
 			g2d.setStroke(new BasicStroke(5));
-			g2d.drawRect((int)(s.getWidth() * squareSize), (int)(s.getHeight() * squareSize), (int)squareSize, (int)squareSize);
+			g2d.drawRect((int)(s.getX() * squareSize), (int)(s.getY() * squareSize), (int)squareSize, (int)squareSize);
 			
 			highLightMoves(g2d,squareSize,model.getTurn());
 			
@@ -68,22 +70,11 @@ public class MyView implements Observer, MouseListener{
 	public void highLightMoves(Graphics2D g2d, double squareSize, int turn) {
 		g2d.setColor(Color.GREEN);
 		
-		if(turn == 1) {
-			Dimension upLeft = new Dimension(model.getSelected().width - 1, model.getSelected().height -1);
-			Dimension upRight = new Dimension(model.getSelected().width + 1, model.getSelected().height -1);
-			
-			if(upLeft.width >= 0 && upLeft.height >=0) {
-				Piece p = model.getPieceAt(upLeft.width, upLeft.height);
-				if (p == null) {
-					g2d.drawRect((int)(upLeft.getWidth() * squareSize), (int)(upLeft.getHeight() * squareSize), (int)squareSize, (int)squareSize);
-				}
-			}
-			
-			if(upRight.height >=0 && upRight.width < 8) {
-				Piece p = model.getPieceAt(upRight.width, upRight.height);
-				if (p == null) {
-					g2d.drawRect((int)(upRight.getWidth() * squareSize), (int)(upRight.getHeight() * squareSize), (int)squareSize, (int)squareSize);
-				}
+		ArrayList<ArrayList<Point2D>> moveSet = model.getMoves();
+		
+		for (ArrayList<Point2D> list: moveSet) {
+			for (Point2D point: list) {
+				g2d.drawRect((int)(point.getX() * squareSize), (int)(point.getY() * squareSize), (int)squareSize, (int)squareSize);
 			}
 		}
 	}
@@ -114,37 +105,162 @@ public class MyView implements Observer, MouseListener{
 				Piece p = model.getPieceAt(x, y);
 				if(p != null){
 					if(model.getTurn() == p.getOwner()){
-						model.setSelected(new Dimension(x,y));
+						model.setSelected(new Point(x,y));	
+						initMoveset(new Point(x,y));
 					}
 				}
 			}
 		} else {
-			Dimension upLeft = new Dimension(model.getSelected().width - 1, model.getSelected().height -1);
-			Dimension upRight = new Dimension(model.getSelected().width + 1, model.getSelected().height -1);
+			if (inMoveset(new Point(x,y))) {
+				
+				//TODO Add implementation for a move
+				System.out.println("Found in moveset");
+			} else {
+				model.setSelected(null);
+				model.resetAvailableMoves();
+			}
 			
-			if(upLeft.width >= 0 && upLeft.height >=0) {
-				Piece p = model.getPieceAt(upLeft.width, upLeft.height);
+ /*
+			Point2D upLeft = new Point((int)model.getSelected().getX() - 1, (int)model.getSelected().getY() -1);
+			Point2D upRight = new Point((int)model.getSelected().getX() + 1, (int)model.getSelected().getY() -1);
+			
+			if(upLeft.getX() >= 0 && upLeft.getY() >=0) {
+				Piece p = model.getPieceAt((int)upLeft.getX(), (int)upLeft.getY());
 				if (p == null) {
-					if(x == upLeft.width && y == upLeft.height){
-						model.setPiece(x, y, model.getPieceAt(model.getSelected().width, model.getSelected().height));
-						model.setPiece(model.getSelected().width, model.getSelected().height, null);
+					if(x == (int)upLeft.getX() && y == (int)upLeft.getY()){
+						model.setPiece(x, y, model.getPieceAt((int)model.getSelected().getX(), (int)model.getSelected().getY()));
+						model.setPiece((int)model.getSelected().getX(), (int)model.getSelected().getY(), null);
 					}
 				}
 			}
-			if(upRight.height >=0 && upRight.width < 8) {
-				Piece p = model.getPieceAt(upRight.width, upRight.height);
+			if(upRight.getY() >=0 && upRight.getX() < 8) {
+				Piece p = model.getPieceAt((int)upRight.getX(), (int)upRight.getY());
 				if (p == null) {
-					if(x == upRight.width && y == upRight.height){
-						model.setPiece(x, y, model.getPieceAt(model.getSelected().width, model.getSelected().height));
-						model.setPiece(model.getSelected().width, model.getSelected().height, null);
+					if(x == (int)upRight.getX() && y == (int)upRight.getY()){
+						model.setPiece(x, y, model.getPieceAt((int)model.getSelected().getX(), (int)model.getSelected().getY()));
+						model.setPiece((int)model.getSelected().getX(), (int)model.getSelected().getY(), null);
 					}
 				}
 			} 
 			model.setSelected(null);
 			
-			
+			*/
 		}
 		
+	}
+	
+	public boolean inMoveset(Point2D p) {
+		return model.inMoveset(p);
+	}
+	
+	public void initMoveset(Point2D p) {
+		ArrayList<Point2D> initList = new ArrayList<Point2D>();
+		if(model.getTurn() == 1) {
+			if(p.getX() >= 1 && p.getY() >= 1) {
+				Piece tmp = model.getPieceAt((int)p.getX()-1, (int)p.getY()-1);
+				if(tmp == null){
+					initList.add(new Point((int)p.getX()-1,(int)p.getY()-1));
+					model.addMove(initList);
+				}
+			}
+			initList.clear();
+			if(p.getX() <= 6 && p.getY() >= 1) {
+				Piece tmp = model.getPieceAt((int)p.getX()+1, (int)p.getY()-1);
+				if(tmp == null){
+					initList.add(new Point((int)p.getX()+1,(int)p.getY()-1));
+					model.addMove(initList);
+				}
+			}
+		} else {
+			
+		}
+		findMoveset(p,new ArrayList<Point2D>());
+	}
+		
+	public void findMoveset(Point2D p, ArrayList<Point2D> l) {
+		
+		if (model.getTurn() == 1) {
+			//Logic for player 1
+			boolean left = leftPossible(p);
+			boolean right = rightPossible(p);
+			if(!left && !right) {
+				model.addMove(l);
+			} else {
+				//TODO Careful not sure if deep copy or shallow copy in the recursion
+				if (left) {
+					ArrayList<Point2D> leftMove = new ArrayList<Point2D>();
+					for(Point2D point : l) {
+						leftMove.add((Point2D) point.clone());
+					}
+					leftMove.add(p);
+					findMoveset(new Point((int)p.getX()-2,(int)p.getY()-2),leftMove);
+				}
+				if (right) {
+					ArrayList<Point2D> rightMove = new ArrayList<Point2D>();
+					for(Point2D point : l) {
+						rightMove.add((Point2D) point.clone());
+					}
+					rightMove.add(p);
+					findMoveset(new Point((int)p.getX()+2,(int)p.getY()-2),rightMove);
+				}
+			}
+		} else {
+			//Logic for player 2
+		}
+	}
+	
+	public boolean leftPossible(Point2D p) {
+		if (model.getTurn() == 1) {
+			//Logic for player 1
+			if (p.getX() <= 1 || p.getY() <=1) {
+				return false;
+			} else{
+				Piece tmp = model.getPieceAt((int)p.getX()-1, (int)p.getY()-1);
+				if (tmp == null) {
+					return false;
+				} else if (tmp.getOwner() == 1){
+					return false;
+				} else {
+					tmp = model.getPieceAt((int)p.getX()-2, (int)p.getY()-2);
+					if (tmp == null) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+				
+		} else {
+			//Logic for player 2
+			return false;
+		}
+	}
+	
+	public boolean rightPossible(Point2D p) {
+		if (model.getTurn() == 1) {
+			//Logic for player 1
+			if (p.getX() >= 6 || p.getY() <=1) {
+				return false;
+			} else{
+				Piece tmp = model.getPieceAt((int)p.getX()+1, (int)p.getY()-1);
+				if (tmp == null) {
+					return false;
+				} else if (tmp.getOwner() == 1){
+					return false;
+				} else {
+					tmp = model.getPieceAt((int)p.getX()+2, (int)p.getY()-2);
+					if (tmp == null) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+				
+		} else {
+			//Logic for player 2
+			return false;
+		}
 	}
 
 	@Override
